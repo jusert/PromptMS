@@ -1,0 +1,37 @@
+{
+    "manifest_version": 3,
+    "name": "PromptMS",
+    "version": "1.0.0",
+    "permissions": [
+    "sidePanel",
+    "storage",
+    "clipboardWrite",
+    "tabs", 
+    "activeTab"
+    ],
+    "host_permissions": [
+        "http://127.0.0.1:8787/*"
+    ],
+    "action": {
+        "default_title": "点击打开侧边栏"
+    },
+    "side_panel": {
+        "default_path": "index.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://gemini.google.com/*", 
+                "https://chatgpt.com/*",
+                "https://grok.com/*",
+                "https://chat.deepseek.com/*",
+                "https://chat.qwen.ai/*"
+            ],
+            "js": ["adapters.js", "content.js"],
+            "run_at": "document_end"
+        }
+    ]
+}

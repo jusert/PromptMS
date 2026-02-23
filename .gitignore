@@ -1,0 +1,25 @@
+# ===== backend =====
+.venv
+backend/.venv
+*.db
+
+# ===== frontend =====
+node_modules/
+dist/
+frontend/node_modules/
+frontend/dist/
+
+# ===== build =====
+__pycache__/
+*.py[cod]
+*.spec
+build/
+
+# ===== env =====
+.env
+*.local
+
+# ===== editor =====
+.vscode/
+.idea/
+.DS_Store
