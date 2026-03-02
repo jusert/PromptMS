@@ -6,33 +6,20 @@
           <button :class="['tab-btn', viewMode === 'list' ? 'active' : '']" @click="toggleView('list')">列表</button>
           <button :class="['tab-btn', viewMode === 'category' ? 'active' : '']" @click="toggleView('category')">文件夹</button>
         </div>
-
-        <div class="actions">
-          <button class="action-btn-text primary" @click="openCreatePrompt">
-            <span class="plus">+</span> 提示词
-          </button>
-          <button class="action-btn-text secondary" @click="openCreateCategory" title="新建文件夹">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFCA28">
-            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+        
+        <button class="icon-btn settings-trigger" @click="showSettings = true" title="模型设置">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-            文件夹
-          </button>
-        </div>
-
-        <CategoryEditor 
-          v-if="showCategoryEditor"
-          :is-edit="categoryEditorConfig.isEdit"
-          :initial-data="categoryEditorConfig.initialData"
-          :loading="categoryEditorConfig.loading"
-          @close="showCategoryEditor = false"
-          @save="handleSaveCategory"
-        />
+        </button>
       </div>
 
       <Breadcrumb 
         v-if="viewMode === 'category'"
         :items="breadcrumbs" 
         @navigate="(item) => loadCategoryContent(item.id, item.name)" 
+        class="compact-breadcrumb"
       />
     </header>
 
@@ -82,6 +69,20 @@
       </template>
     </main>
 
+    <footer class="panel-footer">
+      <div class="header-actions">
+        <button class="action-btn-text primary flex-1" @click="openCreatePrompt">
+          <span class="plus">+</span> 提示词
+        </button>
+        <button class="action-btn-text secondary" @click="openCreateCategory" title="新建文件夹">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFCA28">
+            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+          </svg>
+          文件夹
+        </button>
+      </div>
+    </footer>
+
     <PromptEditor 
       v-if="showPromptEditor"
       :is-edit="promptEditorConfig.isEdit"
@@ -91,6 +92,17 @@
       @close="showPromptEditor = false"
       @save="handleSavePrompt"
     />
+
+    <CategoryEditor 
+      v-if="showCategoryEditor"
+      :is-edit="categoryEditorConfig.isEdit"
+      :initial-data="categoryEditorConfig.initialData"
+      :loading="categoryEditorConfig.loading"
+      @close="showCategoryEditor = false"
+      @save="handleSaveCategory"
+    />
+
+    <SettingsView v-if="showSettings" @close="showSettings = false" />
   </div>
 </template>
 
@@ -104,6 +116,7 @@ import CategoryItem from './components/CategoryItem.vue';
 import CategoryEditor from './components/CategoryEditor.vue';
 import PromptItem from './components/PromptItem.vue';
 import PromptEditor from './components/PromptEditor.vue';
+import SettingsView from './components/SettingsView.vue';
 
 // --- 状态管理 ---
 const loading = ref(false);
@@ -118,14 +131,11 @@ const showCategoryEditor = ref(false);
 const categoryEditorConfig = reactive({ isEdit: false, initialData: {}, loading: false });
 const showPromptEditor = ref(false);
 const promptEditorConfig = reactive({ isEdit: false, initialData: {}, loading: false });
+const showSettings = ref(false);
 
 // --- API 交互逻辑 ---
 const fetchCategories = async () => {
-  try {
-    allCategories.value = await categoryService.list(1, 100);
-  } catch (err) {
-    console.error('获取分类列表失败');
-  }
+  try { allCategories.value = await categoryService.list(1, 100); } catch (err) { console.error('获取分类失败'); }
 };
 
 const loadCategoryContent = async (id, name = '根目录') => {
@@ -140,86 +150,48 @@ const loadCategoryContent = async (id, name = '根目录') => {
       updateBreadcrumbs(id, name);
     }
     currentCategoryId.value = id;
-  } finally {
-    loading.value = false;
-  }
+  } finally { loading.value = false; }
 };
 
 const loadAllPrompts = async () => {
   loading.value = true;
-  try {
-    allPrompts.value = await promptService.list({ page: 1, size: 100 });
-  } finally {
-    loading.value = false;
-  }
+  try { allPrompts.value = await promptService.list({ page: 1, size: 100 }); } finally { loading.value = false; }
 };
 
 const handleDeletePrompt = async (id) => {
-  if (!confirm('确定要删除此提示词吗？此操作不可撤销。')) return;
-  try {
-    await promptService.delete(id);
-    refreshData();
-  } catch (err) {
-    alert('删除失败: ' + err);
-  }
+  if (!confirm('确定要删除此提示词吗？')) return;
+  try { await promptService.delete(id); refreshData(); } catch (err) { alert('删除失败: ' + err); }
 };
 
 const handleDeleteCategory = async (id) => {
   const cat = categoryData.value.sub_categories.find(c => c.id === id);
-  if (cat && (cat.id === 0 || cat.name === '未分类')) {
-    return alert('系统默认文件夹不能删除');
-  }
-  if (!confirm('确定删除文件夹吗？文件夹内的提示词可能变为未分类。')) return;
-  try {
-    await categoryService.delete(id);
-    refreshData();
-  } catch (err) {
-    alert('删除失败: ' + err);
-  }
+  if (cat && (cat.id === 0 || cat.name === '未分类')) return alert('系统默认文件夹不能删除');
+  if (!confirm('确定删除文件夹吗？')) return;
+  try { await categoryService.delete(id); refreshData(); } catch (err) { alert('删除失败: ' + err); }
 };
 
 const handleRollbackPrompt = async ({ id, version }) => {
-  try {
-    await promptService.rollback(id, version);
-    refreshData();
-    alert('已回滚至 v' + version);
-  } catch (err) {
-    alert('回滚失败: ' + err);
-  }
+  try { await promptService.rollback(id, version); refreshData(); alert('已回滚至 v' + version); } catch (err) { alert('回滚失败: ' + err); }
 };
 
 const handleSavePrompt = async (formData) => {
   promptEditorConfig.loading = true;
   try {
-    if (promptEditorConfig.isEdit) {
-      await promptService.update(promptEditorConfig.initialData.id, formData);
-    } else {
-      await promptService.create(formData);
-    }
+    if (promptEditorConfig.isEdit) await promptService.update(promptEditorConfig.initialData.id, formData);
+    else await promptService.create(formData);
     showPromptEditor.value = false;
     refreshData();
-  } catch (err) {
-    alert('操作失败: ' + err);
-  } finally {
-    promptEditorConfig.loading = false;
-  }
+  } catch (err) { alert('操作失败: ' + err); } finally { promptEditorConfig.loading = false; }
 };
 
 const handleSaveCategory = async (formData) => {
   categoryEditorConfig.loading = true;
   try {
-    if (categoryEditorConfig.isEdit) {
-      await categoryService.update(categoryEditorConfig.initialData.id, formData);
-    } else {
-      await categoryService.create(formData);
-    }
+    if (categoryEditorConfig.isEdit) await categoryService.update(categoryEditorConfig.initialData.id, formData);
+    else await categoryService.create(formData);
     showCategoryEditor.value = false;
     refreshData();
-  } catch (err) {
-    alert('操作失败: ' + err);
-  } finally {
-    categoryEditorConfig.loading = false;
-  }
+  } catch (err) { alert('操作失败: ' + err); } finally { categoryEditorConfig.loading = false; }
 };
 
 // --- 辅助逻辑 ---
@@ -252,9 +224,7 @@ const openEditPrompt = (prompt) => {
 };
 
 const openEditCategory = (category) => {
-  if (category.id === 0 || category.name === '未分类') {
-    return alert('系统默认文件夹不能编辑');
-  }
+  if (category.id === 0 || category.name === '未分类') return alert('系统默认文件夹不能编辑');
   categoryEditorConfig.isEdit = true;
   categoryEditorConfig.initialData = { ...category };
   showCategoryEditor.value = true;
@@ -280,76 +250,67 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:global(html), :global(body) {
-  margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden;
-}
-
 .side-panel {
   display: flex; flex-direction: column; width: 100%; height: 100vh;
-  background-color: #f5f5f7;
+  background-color: #f6f6f8; color: #333;
 }
 
+/* 头部修改：移除 actions 的间距 */
 .panel-header {
-  background: #fff; padding: 12px 15px; border-bottom: 1px solid #e5e5e5;
-  position: sticky; top: 0; z-index: 10;
+  background: #fff; padding: 10px 14px; border-bottom: 1px solid #e0e0e0;
+  z-index: 10;
 }
 
 .header-top {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
 }
 
-/* 视图切换 */
-.view-tabs {
-  display: flex; background: #eee; padding: 2px; border-radius: 6px;
-}
-.tab-btn {
-  padding: 4px 10px; font-size: 11px; border: none; background: transparent;
-  cursor: pointer; border-radius: 4px; color: #666;
-}
-.tab-btn.active {
-  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #007aff; font-weight: 600;
+/* 底部操作区 */
+.panel-footer {
+  background: #fff;
+  padding: 12px 14px;
+  border-top: 1px solid #e0e0e0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
 }
 
-/* 方案二：按钮布局样式 */
-.actions {
+.header-actions {
   display: flex; gap: 8px;
 }
 
+/* 其余样式保持一致 */
+.view-tabs { display: flex; background: #f0f0f2; padding: 2px; border-radius: 8px; }
+.tab-btn {
+  padding: 4px 12px; font-size: 11px; border: none; background: transparent;
+  cursor: pointer; border-radius: 6px; color: #777; transition: all 0.2s;
+}
+.tab-btn.active {
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); color: #007aff; font-weight: 600;
+}
+
+.icon-btn {
+  background: none; border: none; color: #999; cursor: pointer;
+  padding: 4px; border-radius: 50%; display: flex; align-items: center;
+}
+.icon-btn:hover { background: #f0f0f0; color: #007aff; }
+
 .action-btn-text {
-  display: flex; align-items: center; justify-content: center;
-  padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; height: 32px;
+  border-radius: 8px; font-size: 12px; font-weight: 600;
   cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
-  white-space: nowrap;
 }
+.flex-1 { flex: 1; }
+.action-btn-text.primary { background: #007aff; color: white; }
+.action-btn-text.secondary { background: #fff; color: #555; border-color: #ddd; padding: 0 12px; }
+.action-btn-text:active { transform: scale(0.98); opacity: 0.9; }
 
-.action-btn-text svg { margin-right: 4px; }
-.action-btn-text .plus { font-size: 14px; margin-right: 4px; font-weight: bold; }
+.compact-breadcrumb { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #f0f0f0; }
 
-.action-btn-text.primary {
-  background: #007aff; color: white;
-}
-.action-btn-text.primary:hover {
-  background: #0063cc;
-}
-
-.action-btn-text.secondary {
-  background: #fff; color: #555; border-color: #dcdcdc;
-}
-.action-btn-text.secondary:hover {
-  background: #f9f9f9; border-color: #ccc;
-}
-
-.panel-body {
-  flex: 1; overflow-y: auto; padding: 10px 15px;
-}
-
-.group { margin-bottom: 20px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
+.group { margin-bottom: 16px; }
 .group-label {
-  display: block; font-size: 11px; font-weight: 700; color: #999;
-  text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;
+  display: block; font-size: 10px; font-weight: 700; color: #bbb;
+  text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.8px;
 }
-
-.state-msg {
-  text-align: center; padding: 40px 0; color: #999; font-size: 13px;
-}
+.state-msg { text-align: center; padding: 60px 0; color: #bbb; font-size: 12px; }
+.plus { margin-right: 4px; font-size: 14px; }
 </style>

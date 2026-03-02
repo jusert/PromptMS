@@ -17,7 +17,7 @@ def create_prompt(
     if not prompt:
         raise HTTPException(
             status_code=400, 
-            detail="该分类已存在"
+            detail="该提示词已存在"
         )
     return {"status": "ok"}
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.db import db
-from backend.app.api.v1 import categories, prompts
+from backend.app.api.v1 import categories, prompts, ai
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,5 +31,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(ai.router, prefix="/ai", tags=["AI"])
 app.include_router(prompts.router, prefix="/prompts", tags=["Prompts"])
 app.include_router(categories.router, prefix="/categories", tags=["Categories"])

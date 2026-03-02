@@ -134,3 +134,14 @@ class CategoryDetailOut(CategoryOut):
     total_prompts: int = 0
 
     model_config = ConfigDict(from_attributes=True)
+
+class OptimizeRequest(BaseModel):
+    """ 优化提示词的请求结构 """
+    prompt: str
+
+
+class ConfigUpdate(BaseModel):
+    """ 配置更新请求结构 """
+    api_key: str
+    base_url: str | None = None
+    provider: str | None = None
