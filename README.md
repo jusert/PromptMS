@@ -70,11 +70,21 @@ npm run dev
 ### 后端打包
 
 ```bash
+# 在 Linux 下运行
 uv run pyinstaller backend/run.py \
   --name prompt-backend \
   --noconsole \
   --onefile \
-  --distpath ./backend/dist
+  --distpath ./backend/dist \
+  --workpath ./backend/build
+
+# 在 Windows 下运行
+uv run pyinstaller backend/run.py `
+  --name prompt-backend `
+  --noconsole `
+  --onefile `
+  --distpath ./backend/dist `
+  --workpath ./backend/build 
 ```
 
 ### 前端打包

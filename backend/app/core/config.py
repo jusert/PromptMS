@@ -1,9 +1,25 @@
 import os
+import sys
 from pathlib import Path
 from pydantic_settings import BaseSettings
-# 定位配置文件：backend/app/core/config.py -> core -> app -> backend
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-ENV_PATH = os.path.join(BASE_DIR, ".env")
+
+def get_env_path():
+    """ 
+    动态获取 .env 路径：
+    1. 如果是打包后的环境，返回 .exe 所在的同级目录
+    2. 如果是开发环境，返回代码层级对应的目录
+    """
+    if hasattr(sys, '_MEIPASS'):
+        # 打包后的 .exe 所在目录
+        # sys.executable 指向的是 prompt-backend.exe 的绝对路径
+        return os.path.join(os.path.dirname(sys.executable), ".env")
+    
+    # 开发环境逻辑：保持原来的定位
+    # backend/app/core/config.py -> core -> app -> backend
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    return os.path.join(base_dir, ".env")
+
+ENV_PATH = get_env_path()
 
 class Settings(BaseSettings):
     """ 配置文件 """
