@@ -29,6 +29,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { SUPPORTED_DOMAINS } from '@/config/domains';
 
 const props = defineProps({
   prompt: { type: Object, required: true }
@@ -36,7 +37,6 @@ const props = defineProps({
 console.log(props.prompt);
 // 定义组件向外抛出的事件
 const emit = defineEmits(['edit', 'delete', 'rollback']);
-
 const isHover = ref(false);
 // 修改 PromptItem.vue 中的 handleCopy 函数
 const handleCopy = async () => {
@@ -44,11 +44,10 @@ try {
     // 获取当前窗口的活跃标签页
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
-    const supportedDomains = ["gemini.google.com", "chatgpt.com", "grok.com", "chat.deepseek.com", "chat.qwen.ai"];
-    const isSupported = supportedDomains.some(domain => tab?.url?.includes(domain));
+    const isSupported = SUPPORTED_DOMAINS.some(domain => tab?.url?.includes(domain));
 
     if (!isSupported) {
-      alert("请在支持的 AI 页面（Gemini, ChatGPT, DeepSeek, Grok）使用此功能");
+      alert("请在支持的 AI 页面（Gemini, ChatGPT, Qwen, DeepSeek...）使用此功能");
       return;
     }
 

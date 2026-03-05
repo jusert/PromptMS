@@ -1,4 +1,5 @@
-{
+import { MANIFEST_MATCHES } from "../src/config/domains";
+export default {
     "manifest_version": 3,
     "name": "PromptMS",
     "version": "1.0.0",
@@ -23,14 +24,8 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://gemini.google.com/*", 
-                "https://chatgpt.com/*",
-                "https://grok.com/*",
-                "https://chat.deepseek.com/*",
-                "https://chat.qwen.ai/*"
-            ],
-            "js": ["adapters.js", "content.js"],
+            "matches": MANIFEST_MATCHES,
+            "js": ["assets/content.js"],
             "run_at": "document_end"
         }
     ]

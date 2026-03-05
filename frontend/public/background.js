@@ -9,7 +9,7 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });
 
-// 如果你希望插件安装后默认在所有页面都能点击开启：
+// 插件安装后默认在所有页面都能点击开启侧边栏
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
